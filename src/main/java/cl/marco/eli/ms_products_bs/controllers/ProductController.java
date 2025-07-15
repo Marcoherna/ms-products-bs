@@ -1,36 +1,35 @@
 package cl.marco.eli.ms_products_bs.controllers;
 
-import cl.marco.eli.ms_products_bs.models.Product;
-import cl.marco.eli.ms_products_bs.repository.ProductRepository;
+
+import cl.marco.eli.ms_products_bs.clients.ProductDataClient;
+import cl.marco.eli.ms_products_bs.models.ProductDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Optional;
 
-@RestController // Define que esta clase es un controlador REST.
-@RequestMapping("/api/products") // Todas las URLs de este controlador empezarán con /api/products.
+@RestController
+@RequestMapping("/api/products")
 public class ProductController {
 
-    @Autowired // Inyección de dependencias: Spring nos "inyecta" una instancia de ProductRepository.
-    private ProductRepository productRepository;
+    // Inyectamos el cliente Feign en lugar del repositorio
+    @Autowired
+    private ProductDataClient productDataClient;
 
-    // Endpoint para obtener todos los productos.
-    // GET http://localhost:8081/api/products
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductDTO> getAllProducts() {
+        // La lógica de negocio (si la hubiera) iría aquí.
+        // En este caso, simplemente delegamos la llamada.
+        return productDataClient.getAllProducts();
     }
 
-    // Endpoint para obtener un producto por su ID.
-    // GET http://localhost:8081/api/products/1
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Optional<Product> product = productRepository.findById(id);
-        // Si el producto existe, lo devuelve con un código 200 OK.
-        // Si no, devuelve un 404 Not Found.
-        return product.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
+        ProductDTO product = productDataClient.getProductById(id);
+        if (product != null) {
+            return ResponseEntity.ok(product);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
